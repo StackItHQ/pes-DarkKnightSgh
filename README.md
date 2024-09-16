@@ -59,3 +59,45 @@ All the best ✨.
 
 ## Developer's Section
 *Add your video here, and your approach to the problem (optional). Leave some comments for us here if you want, we will be reading this :)*
+
+
+
+
+
+## Google Sheets and MySQL Synchronization
+
+This project provides a solution for real-time synchronization between Google Sheets and a MySQL database. The application ensures that any CRUD operations (Create, Read, Update, Delete) performed on either platform are mirrored across both systems, maintaining data consistency.
+
+### Features:
+Real-time Synchronization: Automatically syncs data between Google Sheets and MySQL database.
+CRUD Operations: Supports Create, Read, Update, and Delete operations.
+
+### Architecture and Components
+- Flask Web Server:
+Acts as the core of the synchronization system, handling HTTP requests and responses.
+Provides endpoints for synchronization, adding records, deleting records, and retrieving data.
+
+- Google Sheets Integration:
+Utilizes the Google Sheets API to interact with Google Sheets.
+Handles reading data from and writing data to Google Sheets.
+Synchronizes data from Google Sheets to MySQL and vice versa.
+
+-MySQL Database:
+Stores data that is synchronized with Google Sheets.
+Schema includes tables designed to match the structure of data in Google Sheets.
+
+### Description:
+ The idea for using Flask was inspired by my microservices project, and I sought assistance from ChatGPT for implementing the synchronization logic. The primary goal was to ensure that any CRUD (Create, Read, Update, Delete) operations performed on either Google Sheets or the MySQL database would be reflected in both systems in real-time.
+
+Synchronization Mechanism:
+- Flask Application: A Flask application was built to handle synchronization tasks between Google Sheets and the MySQL database.
+- CRUD Operations: The application supports all CRUD operations. Records can be added, updated, and deleted from both Google Sheets and the MySQL database.
+- Real-time Sync: Synchronization occurs every 10-30 seconds. This interval was chosen to balance between real-time updates and API quota limits.
+  
+### Challenges:
+API Quota Management: To address the issue of exceeding API quotas, the sync interval was adjusted to reduce the number of read requests. Additionally, optimizations were made to ensure efficient use of API resources.
+
+
+
+
+
