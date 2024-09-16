@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 def run_sync(interval=30):
     while True:
         try:
-            response = requests.get("http://127.0.0.1:8082/sync")
+            response = requests.get("http://127.0.0.1:8083/sync")
             if response.status_code == 200:
                 logging.info("Sync response: %s", response.json())
             else:
