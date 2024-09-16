@@ -15,10 +15,6 @@ def sync_data():
         # Fetch MySQL data
         mysql_data = session.query(MySheetData).all()
         
-        # Debug info
-        print(f"Google Sheets data: {google_data}")
-        print(f"MySQL data before sync: {[{'name': e.name, 'age': e.age, 'updated_at': e.updated_at} for e in mysql_data]}")
-        
         # Perform synchronization logic (MySQL -> Sheets and Sheets -> MySQL)
         sync_google_to_mysql(google_data)
         sync_mysql_to_google(mysql_data, sheet)
@@ -31,9 +27,6 @@ def sync_google_to_mysql(google_data):
     existing_entries = { (entry.name, entry.age): entry for entry in session.query(MySheetData).all() }
     google_data_set = set((record.get('Name'), record.get('Age')) for record in google_data)
 
-    print(f"Existing entries in MySQL: {existing_entries}")
-    print(f"Google data set: {google_data_set}")
-
     # Update existing records and add new ones
     for record in google_data:
         name = record.get('Name')
@@ -45,27 +38,21 @@ def sync_google_to_mysql(google_data):
             # Update existing record
             entry = existing_entries[(name, age)]
             entry.updated_at = datetime.datetime.utcnow()
-            print(f"Updated record: {entry}")
         else:
             # Add new record
             new_entry = MySheetData(name=name, age=age, updated_at=datetime.datetime.utcnow())
             session.add(new_entry)
-            print(f"Added new record: {new_entry}")
 
     # Handle records in MySQL that are not in Google Sheets
     to_delete = [entry for (name, age), entry in existing_entries.items() if (name, age) not in google_data_set]
     for entry in to_delete:
         session.delete(entry)
-        print(f"Deleted record: {entry}")
     
     session.commit()
 
 def sync_mysql_to_google(mysql_data, sheet):
     existing_data = sheet.get_all_records()
-    existing_entries = { (row['Name'], row['Age']): i for i, row in enumerate(existing_data) }
-
-    print(f"Existing sheet data: {existing_data}")
-    print(f"MySQL data: {mysql_data}")
+    existing_entries = { (row['Name'], row['Age']): i + 1 for i, row in enumerate(existing_data) }  # 1-based index for rows
 
     rows_to_add = []
     rows_to_update = []
@@ -75,27 +62,29 @@ def sync_mysql_to_google(mysql_data, sheet):
         row = [entry.name, entry.age, str(entry.updated_at)]
         if (entry.name, entry.age) in existing_entries:
             existing_row_index = existing_entries[(entry.name, entry.age)]
-            rows_to_update.append((existing_row_index + 2, row))
+            rows_to_update.append((existing_row_index, row))
             rows_to_delete.discard((entry.name, entry.age))
-            print(f"Update row index {existing_row_index + 2} with data: {row}")
         else:
             rows_to_add.append(row)
-            print(f"Queueing row for addition: {row}")
+
+    # Create a new list of rows excluding those marked for deletion
+    rows_to_keep = [
+        sheet.row_values(i)
+        for i in range(1, sheet.row_count + 1)
+        if (sheet.cell(i, 1).value, sheet.cell(i, 2).value) not in rows_to_delete
+    ]
+
+    # Append new rows to the list
+    rows_to_keep.extend(rows_to_add)
     
-    # Delete rows that are no longer in MySQL
-    for (name, age) in rows_to_delete:
-        row_index = existing_entries[(name, age)] + 2
-        sheet.delete_row(row_index)
-        print(f"Deleted row index {row_index}")
+    # Clear the sheet and update with the new data
+    sheet.clear()
+    if rows_to_keep:
+        sheet.append_rows(rows_to_keep)
 
     # Update existing rows
     for row_index, row in rows_to_update:
         sheet.update(f"A{row_index}:C{row_index}", [row])
-    
-    # Append new rows
-    if rows_to_add:
-        sheet.append_rows(rows_to_add)
-        print(f"Added rows: {rows_to_add}")
 
 @app.route("/add", methods=["POST"])
 def add_record():
@@ -103,7 +92,6 @@ def add_record():
     new_entry = MySheetData(name=data["name"], age=data["age"], updated_at=datetime.datetime.utcnow())
     session.add(new_entry)
     session.commit()
-    print(f"Record added: {new_entry}")
     return jsonify({"message": "Record added successfully"}), 201
 
 @app.route("/delete/<int:id>", methods=["DELETE"])
@@ -112,7 +100,6 @@ def delete_record(id):
     if entry:
         session.delete(entry)
         session.commit()
-        print(f"Record deleted: {entry}")
         return jsonify({"message": "Record deleted successfully"}), 200
     return jsonify({"error": "Record not found"}), 404
 
