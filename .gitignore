@@ -1,0 +1,19 @@
+# Ignore Google Cloud credentials
+credentials.json
+
+# Ignore Python virtual environment
+venv/
+
+# Ignore database files
+*.db
+
+# Ignore IDE and editor specific files
+*.vscode/
+*.idea/
+
+# Ignore operating system files
+.DS_Store
+*.log
+
+# Ignore other sensitive files
+*.env
