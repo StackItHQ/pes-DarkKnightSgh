@@ -97,6 +97,10 @@ Synchronization Mechanism:
 ### Challenges:
 API Quota Management: To address the issue of exceeding API quotas, the sync interval was adjusted to reduce the number of read requests. Additionally, optimizations were made to ensure efficient use of API resources.
 
+It was working properly,but unfortunately i could not record while it was working,iam unable to fix the api issue
+## Video : 
+https://drive.google.com/file/d/1pBBku3CCzk-K7kZKE19yzgvz7S8m_TPK/view?usp=sharing
+
 
 
 
